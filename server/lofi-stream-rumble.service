@@ -1,0 +1,18 @@
+[Unit]
+Description=Lofi Stream to Rumble (Library Theme)
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/lofi-stream-rumble
+Environment=RUMBLE_URL=YOUR_RTMP_URL_HERE
+Environment=RUMBLE_KEY=YOUR_STREAM_KEY_HERE
+ExecStart=/opt/lofi-stream-rumble/stream.sh
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>library lofi</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="room">
+    <div class="bookshelf">
+      <div class="shelf shelf-top">
+        <div class="book b1"></div>
+        <div class="book b2"></div>
+        <div class="book b3"></div>
+        <div class="book b4"></div>
+        <div class="book b5"></div>
+        <div class="book b6"></div>
+        <div class="book b7"></div>
+      </div>
+      <div class="shelf shelf-bottom">
+        <div class="book b8"></div>
+        <div class="book b9"></div>
+        <div class="book b10"></div>
+        <div class="book b11"></div>
+        <div class="book b12"></div>
+        <div class="book b13"></div>
+      </div>
+    </div>
+
+    <div class="window">
+      <div class="window-pane">
+        <div class="rain-outside"></div>
+      </div>
+      <div class="window-frame-h"></div>
+      <div class="window-frame-v"></div>
+      <div class="curtain curtain-left"></div>
+      <div class="curtain curtain-right"></div>
+    </div>
+
+    <div class="reading-nook">
+      <div class="armchair">
+        <div class="chair-back"></div>
+        <div class="chair-seat"></div>
+        <div class="chair-arm chair-arm-left"></div>
+        <div class="chair-arm chair-arm-right"></div>
+      </div>
+      <div class="side-table">
+        <div class="lamp">
+          <div class="lamp-shade"></div>
+          <div class="lamp-base"></div>
+          <div class="lamp-glow"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="desk">
+      <div class="desk-top"></div>
+      <div class="open-book">
+        <div class="page page-left"></div>
+        <div class="page page-right"></div>
+      </div>
+      <div class="pen-holder">
+        <div class="pen"></div>
+      </div>
+      <div class="candle">
+        <div class="candle-body"></div>
+        <div class="flame"></div>
+      </div>
+    </div>
+
+    <div class="fireplace">
+      <div class="mantle"></div>
+      <div class="firebox">
+        <div class="fire">
+          <div class="flame-piece f1"></div>
+          <div class="flame-piece f2"></div>
+          <div class="flame-piece f3"></div>
+        </div>
+        <div class="logs"></div>
+      </div>
+      <div class="clock">
+        <div class="clock-face"></div>
+        <div class="clock-hand hour"></div>
+        <div class="clock-hand minute"></div>
+      </div>
+    </div>
+
+    <div class="globe"></div>
+  </div>
+
+  <div class="info">
+    <div class="title">study lofi - focus & read</div>
+    <div class="equalizer">
+      <span></span><span></span><span></span><span></span><span></span>
+    </div>
+  </div>
+
+  <script>
+    // Generate rain drops outside window
+    const rainOutside = document.querySelector('.rain-outside');
+    for (let i = 0; i < 50; i++) {
+      const drop = document.createElement('div');
+      drop.className = 'drop';
+      drop.style.left = Math.random() * 100 + '%';
+      drop.style.animationDuration = (Math.random() * 0.3 + 0.4) + 's';
+      drop.style.animationDelay = Math.random() * 2 + 's';
+      rainOutside.appendChild(drop);
+    }
+
+    // Web Audio API - Classical-Inspired Lofi
+    let audioStarted = false;
+
+    function startAudio() {
+      if (audioStarted) return;
+      audioStarted = true;
+
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const masterGain = ctx.createGain();
+      masterGain.gain.value = 0.28;
+      masterGain.connect(ctx.destination);
+
+      // Fire crackle ambient
+      const crackleBuffer = ctx.createBuffer(1, ctx.sampleRate * 4, ctx.sampleRate);
+      const crackleData = crackleBuffer.getChannelData(0);
+      for (let i = 0; i < crackleBuffer.length; i++) {
+        // Random crackles with occasional louder pops
+        if (Math.random() > 0.995) {
+          crackleData[i] = (Math.random() * 0.6 - 0.3);
+        } else if (Math.random() > 0.99) {
+          crackleData[i] = (Math.random() * 0.3 - 0.15);
+        } else {
+          crackleData[i] = 0;
+        }
+      }
+      const fireCrackle = ctx.createBufferSource();
+      fireCrackle.buffer = crackleBuffer;
+      fireCrackle.loop = true;
+      const fireFilter = ctx.createBiquadFilter();
+      fireFilter.type = 'bandpass';
+      fireFilter.frequency.value = 800;
+      fireFilter.Q.value = 0.5;
+      const fireGain = ctx.createGain();
+      fireGain.gain.value = 0.25;
+      fireCrackle.connect(fireFilter);
+      fireFilter.connect(fireGain);
+      fireGain.connect(masterGain);
+      fireCrackle.start();
+
+      // Rain on window (pink noise, very soft)
+      const rainBuffer = ctx.createBuffer(1, ctx.sampleRate * 2, ctx.sampleRate);
+      const rainData = rainBuffer.getChannelData(0);
+      let b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+      for (let i = 0; i < rainBuffer.length; i++) {
+        const white = Math.random() * 2 - 1;
+        b0 = 0.99886 * b0 + white * 0.0555179;
+        b1 = 0.99332 * b1 + white * 0.0750759;
+        b2 = 0.96900 * b2 + white * 0.1538520;
+        b3 = 0.86650 * b3 + white * 0.3104856;
+        b4 = 0.55000 * b4 + white * 0.5329522;
+        b5 = -0.7616 * b5 - white * 0.0168980;
+        rainData[i] = b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362;
+        rainData[i] *= 0.11;
+        b6 = white * 0.115926;
+      }
+      const rain = ctx.createBufferSource();
+      rain.buffer = rainBuffer;
+      rain.loop = true;
+      const rainFilter = ctx.createBiquadFilter();
+      rainFilter.type = 'lowpass';
+      rainFilter.frequency.value = 600;
+      const rainGain = ctx.createGain();
+      rainGain.gain.value = 0.12;
+      rain.connect(rainFilter);
+      rainFilter.connect(rainGain);
+      rainGain.connect(masterGain);
+      rain.start();
+
+      // Classical-inspired chord progression: Dm - Gm - C - F
+      const chords = [
+        [293.66, 349.23, 440.00], // D min
+        [196.00, 233.08, 293.66], // G min (lower)
+        [261.63, 329.63, 392.00], // C maj
+        [174.61, 220.00, 261.63], // F maj (lower)
+      ];
+
+      // Piano-like pad (sine with slight detune for warmth)
+      function playPianoPad(freqs, startTime, duration) {
+        freqs.forEach((freq, idx) => {
+          // Main tone
+          const osc1 = ctx.createOscillator();
+          osc1.type = 'sine';
+          osc1.frequency.value = freq * 0.5;
+
+          // Slightly detuned for warmth
+          const osc2 = ctx.createOscillator();
+          osc2.type = 'sine';
+          osc2.frequency.value = freq * 0.5 * 1.003;
+
+          const oscGain = ctx.createGain();
+          const filter = ctx.createBiquadFilter();
+          filter.type = 'lowpass';
+          filter.frequency.value = 1000;
+
+          osc1.connect(filter);
+          osc2.connect(filter);
+          filter.connect(oscGain);
+          oscGain.connect(masterGain);
+
+          // Soft piano-like envelope
+          oscGain.gain.setValueAtTime(0, startTime);
+          oscGain.gain.linearRampToValueAtTime(0.05, startTime + 0.8);
+          oscGain.gain.setValueAtTime(0.05, startTime + duration - 1);
+          oscGain.gain.linearRampToValueAtTime(0, startTime + duration);
+
+          osc1.start(startTime);
+          osc1.stop(startTime + duration);
+          osc2.start(startTime);
+          osc2.stop(startTime + duration);
+        });
+      }
+
+      // Very soft strings pad
+      function playStringsPad(freqs, startTime, duration) {
+        freqs.forEach(freq => {
+          const osc = ctx.createOscillator();
+          osc.type = 'triangle';
+          osc.frequency.value = freq * 0.25; // Two octaves down
+
+          const oscGain = ctx.createGain();
+          const filter = ctx.createBiquadFilter();
+          filter.type = 'lowpass';
+          filter.frequency.value = 500;
+
+          osc.connect(filter);
+          filter.connect(oscGain);
+          oscGain.connect(masterGain);
+
+          // Very slow attack for strings
+          oscGain.gain.setValueAtTime(0, startTime);
+          oscGain.gain.linearRampToValueAtTime(0.03, startTime + 2);
+          oscGain.gain.setValueAtTime(0.03, startTime + duration - 2);
+          oscGain.gain.linearRampToValueAtTime(0, startTime + duration);
+
+          osc.start(startTime);
+          osc.stop(startTime + duration);
+        });
+      }
+
+      function scheduleChords() {
+        const now = ctx.currentTime;
+        const chordDuration = 5;
+        chords.forEach((chord, i) => {
+          playPianoPad(chord, now + i * chordDuration, chordDuration);
+          playStringsPad(chord, now + i * chordDuration, chordDuration);
+        });
+        setTimeout(scheduleChords, chords.length * chordDuration * 1000);
+      }
+      scheduleChords();
+
+      // Gentle double-bass style bass
+      const bassNotes = [73.42, 49.00, 65.41, 43.65]; // D2, G1, C2, F1
+      let bassIndex = 0;
+
+      function playBass() {
+        const osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = bassNotes[bassIndex];
+
+        const oscGain = ctx.createGain();
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 150;
+
+        osc.connect(filter);
+        filter.connect(oscGain);
+        oscGain.connect(masterGain);
+
+        const now = ctx.currentTime;
+        oscGain.gain.setValueAtTime(0, now);
+        oscGain.gain.linearRampToValueAtTime(0.1, now + 0.3);
+        oscGain.gain.setValueAtTime(0.1, now + 4.5);
+        oscGain.gain.linearRampToValueAtTime(0, now + 5);
+
+        osc.start(now);
+        osc.stop(now + 5);
+
+        bassIndex = (bassIndex + 1) % bassNotes.length;
+        setTimeout(playBass, 5000);
+      }
+      playBass();
+
+      // Clock ticking (very subtle)
+      function playTick() {
+        const osc = ctx.createOscillator();
+        osc.type = 'sine';
+        osc.frequency.value = 2000;
+
+        const oscGain = ctx.createGain();
+        osc.connect(oscGain);
+        oscGain.connect(masterGain);
+
+        const now = ctx.currentTime;
+        oscGain.gain.setValueAtTime(0.015, now);
+        oscGain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+
+        osc.start(now);
+        osc.stop(now + 0.05);
+
+        setTimeout(playTick, 1000);
+      }
+      setTimeout(playTick, 500);
+
+      // Occasional page turn sound
+      function playPageTurn() {
+        if (Math.random() > 0.2) {
+          setTimeout(playPageTurn, 8000 + Math.random() * 12000);
+          return;
+        }
+
+        const buffer = ctx.createBuffer(1, ctx.sampleRate * 0.3, ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < buffer.length; i++) {
+          const t = i / ctx.sampleRate;
+          data[i] = (Math.random() * 2 - 1) * Math.exp(-t * 15) * 0.3;
+        }
+
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = 1200;
+        filter.Q.value = 1;
+        const gain = ctx.createGain();
+        gain.gain.value = 0.15;
+
+        source.connect(filter);
+        filter.connect(gain);
+        gain.connect(masterGain);
+        source.start();
+
+        setTimeout(playPageTurn, 8000 + Math.random() * 12000);
+      }
+      setTimeout(playPageTurn, 5000);
+
+      // Enhanced vinyl crackle for vintage feel
+      const vinylBuffer = ctx.createBuffer(1, ctx.sampleRate * 4, ctx.sampleRate);
+      const vinylData = vinylBuffer.getChannelData(0);
+      for (let i = 0; i < vinylBuffer.length; i++) {
+        if (Math.random() > 0.98) {
+          vinylData[i] = (Math.random() * 0.5 - 0.25);
+        } else if (Math.random() > 0.995) {
+          vinylData[i] = (Math.random() * 0.3 - 0.15);
+        } else {
+          vinylData[i] = 0;
+        }
+      }
+      const vinyl = ctx.createBufferSource();
+      vinyl.buffer = vinylBuffer;
+      vinyl.loop = true;
+      const vinylGain = ctx.createGain();
+      vinylGain.gain.value = 0.25;
+      vinyl.connect(vinylGain);
+      vinylGain.connect(masterGain);
+      vinyl.start();
+
+      console.log('Library lofi audio started');
+    }
+
+    // Auto-start for streaming
+    document.addEventListener('click', startAudio, { once: true });
+    document.addEventListener('keydown', startAudio, { once: true });
+
+    setTimeout(() => {
+      startAudio();
+    }, 1000);
+  </script>
+</body>
+</html>
