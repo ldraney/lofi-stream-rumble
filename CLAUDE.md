@@ -2,6 +2,16 @@
 
 24/7 lofi stream to Rumble with a cozy library/study theme.
 
+## Secrets
+
+```bash
+# Stream key and RTMP URL (pending Rumble approval)
+cat ~/api-secrets/lofi-stream/platforms/rumble.env
+
+# SSH key for servers
+~/api-secrets/hetzner-server/id_ed25519
+```
+
 ## Quick Reference
 
 ```bash
